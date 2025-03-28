@@ -4,7 +4,7 @@ import csv
 from sympy import isprime
 from prettytable import PrettyTable
 
-def find_prime_fibonacci(time_limit=12):
+def find_prime_fibonacci(time_limit=60):
     start_time = time.time()
     a, b = 0, 1
     fib_count = 0
