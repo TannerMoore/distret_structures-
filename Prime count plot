@@ -1,0 +1,50 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import os
+import time
+from sympy import primerange
+
+def count_primes_below(n):
+    """Returns the number of primes less than n and the time taken."""
+    start_time = time.time()
+    count = len(list(primerange(1, n)))
+    end_time = time.time()
+    return count, end_time - start_time
+
+# Define values for n
+values = [10, 100, 1000, 10000, 100000, 1000000]
+prime_counts = []
+times = []
+
+for n in values:
+    count, duration = count_primes_below(n)
+    prime_counts.append(count)
+    times.append(duration)
+    print(f"Counted primes below {n} in {duration:.6f} seconds.")
+
+# Create a DataFrame and save to CSV
+csv_filename = "prime_counts.csv"
+prime_data = pd.DataFrame({'N': values, 'Prime Count': prime_counts, 'Time (s)': times})
+prime_data.to_csv(csv_filename, index=False)
+print(f"CSV file '{csv_filename}' created successfully.")
+
+# Open the CSV file in Microsoft Excel
+os.system(f'start excel "{csv_filename}"')
+
+# Logarithmic plot
+plt.figure(figsize=(8, 5))
+plt.plot(np.log10(values), np.log10(prime_counts), marker='o', linestyle='-', label='Actual Prime Count')
+
+# Predict number of primes < 10 million using Prime Number Theorem
+n_pred = 10_000_000
+predicted_primes = n_pred / np.log(n_pred)
+print(f"Predicted number of primes less than 10 million: {int(predicted_primes)}")
+
+# Show the plot
+plt.xlabel("log10(N)")
+plt.ylabel("log10(Number of Primes)")
+plt.title("Log-Log Plot of Prime Counts")
+plt.legend()
+plt.grid(True)
+plt.show()

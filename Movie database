@@ -1,0 +1,114 @@
+import sqlite3
+import tkinter as tk
+from tkinter import ttk
+
+# Connect to SQLite database (or create it if it doesn't exist)
+conn = sqlite3.connect("movies.db")
+cursor = conn.cursor()
+
+# Create table for movies
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS movies (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT,
+    genre TEXT,
+    release_year INTEGER,
+    director TEXT,
+    imdb_rating REAL
+)
+''')
+
+# Optional: Clear the database to remove duplicates (Run this once if needed)
+cursor.execute("DELETE FROM movies")
+conn.commit()
+
+# Function to add a movie (prevents duplicates)
+def add_movie(title, genre, release_year, director, imdb_rating):
+    cursor.execute("SELECT COUNT(*) FROM movies WHERE title = ?", (title,))
+    count = cursor.fetchone()[0]
+    
+    if count == 0:
+        cursor.execute("INSERT INTO movies (title, genre, release_year, director, imdb_rating) VALUES (?, ?, ?, ?, ?)",
+                       (title, genre, release_year, director, imdb_rating))
+        conn.commit()
+        print(f"Added movie: {title}")
+    else:
+        print(f"Movie '{title}' already exists. Skipping insertion.")
+
+# Function to display all movies sorted by rating (best to worst) in a GUI
+def display_movies():
+    cursor.execute("SELECT * FROM movies ORDER BY imdb_rating DESC")
+    movies = cursor.fetchall()
+
+    # Create the main window
+    root = tk.Tk()
+    root.title("Movies List")
+
+    # Create a Treeview widget
+    tree = ttk.Treeview(root, columns=("Title", "Genre", "Release Year", "Director", "IMDb Rating"), show="headings")
+    
+    # Define columns
+    tree.heading("Title", text="Title")
+    tree.heading("Genre", text="Genre")
+    tree.heading("Release Year", text="Release Year")
+    tree.heading("Director", text="Director")
+    tree.heading("IMDb Rating", text="IMDb Rating")
+    
+    # Populate the table with movie data
+    for movie in movies:
+        tree.insert("", tk.END, values=movie[1:])  # Skip the ID column
+
+    # Place the Treeview widget in the window
+    tree.pack(fill="both", expand=True)
+
+    # Start the GUI loop
+    root.mainloop()
+
+# Add all MCU movies including Deadpool and Wolverine
+movies_list = [
+    ("Iron Man", "Action", 2008, "Jon Favreau", 7.9),
+    ("The Incredible Hulk", "Action", 2008, "Louis Leterrier", 6.7),
+    ("Iron Man 2", "Action", 2010, "Jon Favreau", 7.0),
+    ("Thor", "Action", 2011, "Kenneth Branagh", 7.0),
+    ("Captain America: The First Avenger", "Action", 2011, "Joe Johnston", 6.9),
+    ("The Avengers", "Action", 2012, "Joss Whedon", 8.0),
+    ("Iron Man 3", "Action", 2013, "Shane Black", 7.2),
+    ("Thor: The Dark World", "Action", 2013, "Alan Taylor", 6.9),
+    ("Captain America: The Winter Soldier", "Action", 2014, "Anthony Russo, Joe Russo", 7.8),
+    ("Guardians of the Galaxy", "Action", 2014, "James Gunn", 8.0),
+    ("Avengers: Age of Ultron", "Action", 2015, "Joss Whedon", 7.3),
+    ("Ant-Man", "Action", 2015, "Peyton Reed", 7.3),
+    ("Captain America: Civil War", "Action", 2016, "Anthony Russo, Joe Russo", 7.8),
+    ("Doctor Strange", "Action", 2016, "Scott Derrickson", 7.5),
+    ("Guardians of the Galaxy Vol. 2", "Action", 2017, "James Gunn", 7.6),
+    ("Spider-Man: Homecoming", "Action", 2017, "Jon Watts", 7.4),
+    ("Thor: Ragnarok", "Action", 2017, "Taika Waititi", 7.9),
+    ("Black Panther", "Action", 2018, "Ryan Coogler", 7.3),
+    ("Avengers: Infinity War", "Action", 2018, "Anthony Russo, Joe Russo", 8.4),
+    ("Ant-Man and the Wasp", "Action", 2018, "Peyton Reed", 7.0),
+    ("Captain Marvel", "Action", 2019, "Anna Boden, Ryan Fleck", 6.8),
+    ("Avengers: Endgame", "Action", 2019, "Anthony Russo, Joe Russo", 8.4),
+    ("Spider-Man: Far From Home", "Action", 2019, "Jon Watts", 7.5),
+    ("Black Widow", "Action", 2021, "Cate Shortland", 6.7),
+    ("Shang-Chi and the Legend of the Ten Rings", "Action", 2021, "Destin Daniel Cretton", 7.9),
+    ("Eternals", "Action", 2021, "Chloé Zhao", 6.3),
+    ("Spider-Man: No Way Home", "Action", 2021, "Jon Watts", 8.3),
+    ("Doctor Strange in the Multiverse of Madness", "Action", 2022, "Sam Raimi", 6.9),
+    ("Thor: Love and Thunder", "Action", 2022, "Taika Waititi", 6.3),
+    ("Black Panther: Wakanda Forever", "Action", 2022, "Ryan Coogler", 7.0),
+    ("Ant-Man and The Wasp: Quantumania", "Action", 2023, "Peyton Reed", 6.4),
+    ("Guardians of the Galaxy Vol. 3", "Action", 2023, "James Gunn", 8.0),
+    ("The Marvels", "Action", 2023, "Nia DaCosta", 6.3),
+    ("Deadpool and Wolverine", "Action", 2024, "Tim Miller", 8.5),
+    ("Captain America: Brave New World", "Action", 2024, "Julius Onah", 8.0)
+]
+
+# Add movies to the database (duplicates prevented)
+for movie in movies_list:
+    add_movie(*movie)
+
+# Display all movies sorted by IMDb rating in a GUI
+display_movies()
+
+# Close the connection
+conn.close()
